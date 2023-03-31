@@ -1,0 +1,55 @@
+library(tidyverse)
+library(tableone)
+library(PMCMRplus)
+
+
+# Function used for AgeGroup, based on Reference:Zhang A. Racial differences in growth patterns of children assessed on the basis of bone age. Radiology. 2009 Jan;250(1):228-35. PMID: 18955510
+AgeGroup <- function(x){y=c()
+for (i in 1:nrow(x)){
+  if (x$Sex[i]=='0' & x$CA[i]<6) y=append(y,paste('Group1'))
+  else if (x$Sex[i]=='0' & x$CA[i]>=6 & x$CA[i]<10) y=append(y,paste('Group2'))
+  else if (x$Sex[i]=='0' & x$CA[i]>=10 & x$CA[i]<14) y=append(y,paste('Group3'))
+  else if (x$Sex[i]=='0' & x$CA[i]>=14 & x$CA[i]<19) y=append(y,paste('Group4'))
+  else if (x$Sex[i]=='1' & x$CA[i]<8) y=append(y,paste('Group1'))
+  else if (x$Sex[i]=='1' & x$CA[i]>=8 & x$CA[i]<11) y=append(y,paste('Group2'))
+  else if (x$Sex[i]=='1' & x$CA[i]>=11 & x$CA[i]<16) y=append(y,paste('Group3'))
+  else if (x$Sex[i]=='1' & x$CA[i]>=16 & x$CA[i]<19) y=append(y,paste('Group4'))
+}
+return(y)
+}
+
+
+# Code example for descriptive statistics
+CreateTableOne(vars=c('Sex','CA','BA','Race','(BA-CA)','AgeGroup'), strata='Region',data = Data)%>%
+  print(exact=c('Sex','Race'),nonnormal=c('CA','BA','(BA-CA)'), approx=c('AgeGroup'), showAllLevels = TRUE)
+
+
+# Code example for descriptive statistics of subgroups
+CreateTableOne(vars=c('CA','BA','Race','(BA-CA)','AgeGroup'), strata=c('Region','Sex'),data = Data) %>%
+  print(exact=c('Sex','Race'),nonnormal=c('CA','BA','(BA-CA)'), approx=c('AgeGroup'))
+
+
+#Code example for comparison between multiple groups based on the Kruskal-Wallis test, and the following pairwise comparison based on Dunn's test and bonferroni adjustment.
+kruskal.test(`(BA-CA)`~Region, data = Data)
+PMCMRplus::kwAllPairsDunnTest(`(BA-CA)`~Region, data = Data, p.adjust.method = 'bonferroni')
+
+
+#Code example for comparison between two groups based on Wilcoxon test
+compare_means(Diff ~ Race, data = Data, method = 'wilcox.test', paired = FALSE, group.by = 'Region', ref.group = NULL)
+
+
+# Code example for linear regression analysis
+model <- lm(`(BA-CA)`~Sex+Race+Region+AgeGroup, data = Data)
+summary(model)
+
+
+
+
+
+
+
+
+
+
+
+
